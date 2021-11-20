@@ -3,6 +3,7 @@ A short SLIM script to simulate an Arabidopsis TE insertion
 
 
 Below is a simple shell script to run simulations in SLIM3.
+
 for sel_TE in 0.5 1 2 5
 do
 for del_sel_TE in 0.1 0.2 0.5 0.9
