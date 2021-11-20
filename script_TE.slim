@@ -1,0 +1,40 @@
+initialize() {
+ initializeMutationRate(1e-7);
+ initializeMutationType("m1", 0, "f", sel_TE);///initially beneficial, recessive
+ initializeMutationType("m2", 0.5, "f", 0);///neutral
+ m1.convertToSubstitution = F; ///if converted to substitution, it does not have any fitness effect anymore in SliM (W-F)
+ initializeGenomicElementType("g1", m2, 1);
+ initializeGenomicElement(g1, 0, 99999);
+ initializeRecombinationRate(1e-8);
+}
+1 { sim.addSubpop("p1", 100);
+    p1.setSelfingRate(0.99);
+  }
+1 late() {
+ target = sample(p1.genomes, 1);
+ mut=target.addNewDrawnMutation(m1, 49999);
+ defineConstant("TE", mut);
+ a = 1+drought_length;
+ }
+{
+ meanFitness = mean(p1.cachedFitness(NULL));
+ newSize = min(100,asInteger(100 * meanFitness)); ///If average fitness is >1, we constrain pop size to be at 100 (carrying capacity)
+ p1.setSubpopulationSize(newSize);
+}
+2:50 late() {
+if (sum(sim.subpopulations.individualCount) == 0)
+ cat("Advantage_TE " + sel_TE + " Disandvantage TE " + del_sel_TE + " Generation " + "50" + " TE freq " + "0" + " Pop. size " +  "0" + "\n");
+else if (!TE.isSegregating & !TE.isFixed)
+ cat("Advantage_TE " + sel_TE + " Disandvantage TE " + del_sel_TE + " Generation " + sim.generation + " TE freq " + "0" + " Pop. size " +  size(p1.individuals) + "\n");
+else
+ cat("Advantage_TE " + sel_TE + " Disandvantage TE " + del_sel_TE + " Generation " + sim.generation + " TE freq " + sim.mutationFrequencies(p1, sim.mutationsOfType(m1)) + " Pop. size " +  size(p1.individuals) + "\n");
+}
+2:50 fitness(m1) {
+list_of_drought_generations=asInteger(round(asFloat(seq(1,(50-drought_length+1),length=n_drought_event))));
+ for (i in 1:(drought_length-1))
+  list_of_drought_generations=c(list_of_drought_generations,list_of_drought_generations[1:n_drought_event-1]+i);
+if (any(sim.generation==list_of_drought_generations)==T)
+    return asFloat(1+sel_TE);
+else
+    return asFloat(1-del_sel_TE);
+}
